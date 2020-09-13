@@ -22,8 +22,8 @@ func NewNeo() *Neo {
 	return nil
 }
 
-func (neo Neo) GetActedInReq(c *gin.Context) {
-	data := neo.conf.GetActedIn()
+func (neo Neo) GetGraphReq(c *gin.Context) {
+	data := neo.conf.GetGraph()
 	c.JSON(http.StatusOK, data)
 }
 
@@ -43,6 +43,6 @@ func main() {
 			"message": "pong",
 		})
 	})
-	r.GET("/api/v1/acted_in", neo.GetActedInReq)
+	r.GET("/graph", neo.GetGraphReq)
 	r.Run(":8080")
 }

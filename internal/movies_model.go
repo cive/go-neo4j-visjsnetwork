@@ -43,12 +43,12 @@ func OptionNodeFunceSample1(labels []string, props map[string]interface{}, node 
 	}
 }
 
-func (conf Neo4jConfig) GetActedIn() *visjs.GraphObject {
+func (conf Neo4jConfig) GetGraph() *visjs.GraphObject {
 	conn := conf.Connect(neo4j.AccessModeRead)
 	defer conn.Close()
 	result, err := conn.session.ReadTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
 		result, err := transaction.Run(
-			"MATCH (n)-[r:ACTED_IN]-(m) RETURN n, r, m",
+			"MATCH (n)-[r]-(m) RETURN n, r, m LIMIT 500",
 			nil,
 		)
 		if err != nil {

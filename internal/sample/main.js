@@ -1,5 +1,5 @@
 const xhr = new XMLHttpRequest();
-const url = 'http://localhost:8080/api/v1/acted_in';
+const url = 'http://localhost:8080/graph';
 xhr.open("GET", url);
 xhr.setRequestHeader("Content-Type", "application/json");
 xhr.send();

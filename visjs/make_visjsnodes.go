@@ -47,13 +47,13 @@ type (
 	}
 
 	GraphData struct {
-		NodeSet map[string]Node
-		EdgeSet map[string]Edge
+		NodeSet map[uint64]*Node
+		EdgeSet map[string]*Edge
 	}
 
 	GraphObject struct {
-		Nodes []Node `json:"nodes"`
-		Edges []Edge `json:"edges"`
+		Nodes []*Node `json:"nodes"`
+		Edges []*Edge `json:"edges"`
 	}
 
 	Config struct {
@@ -76,26 +76,23 @@ type (
 
 var color_list = []string{"#00bcd4", "#ff5722", "#b2ebf2", "#dd2c00"}
 
-func (node Node) AddNodeSet(nodeSet map[string]Node) {
-	nodeSet[fmt.Sprintf("%#v", node)] = node
+func (data *GraphData) AddNode(node *Node) {
+	data.NodeSet[node.Id] = node
 }
 
-func (edge Edge) AddEdgeSet(edgeSet map[string]Edge) {
-	edgeSet[fmt.Sprintf("%#v", edge)] = edge
-}
-
-func (data GraphData) AddNode(node Node) {
-	node.AddNodeSet(data.NodeSet)
-}
-
-func (data GraphData) AddEdge(edge Edge) {
-	edge.AddEdgeSet(data.EdgeSet)
+func (data *GraphData) AddEdge(edge *Edge) error {
+	key := fmt.Sprintf("%d%s%d", edge.From, edge.Label, edge.To)
+	if _, ok := data.EdgeSet[key]; ok {
+		return fmt.Errorf("edge key is alreadry exist: %s", key)
+	}
+	data.EdgeSet[key] = edge
+	return nil
 }
 
 func (data GraphData) Export() *GraphObject {
 	graph := GraphObject{}
-	graph.Nodes = make([]Node, 0, 0)
-	graph.Edges = make([]Edge, 0, 0)
+	graph.Nodes = make([]*Node, 0, 0)
+	graph.Edges = make([]*Edge, 0, 0)
 	for _, node := range data.NodeSet {
 		graph.Nodes = append(graph.Nodes, node)
 	}
@@ -114,8 +111,8 @@ func NewConfig() *Config {
 
 func NewGraphData() *GraphData {
 	data := GraphData{}
-	data.NodeSet = make(map[string]Node)
-	data.EdgeSet = make(map[string]Edge)
+	data.NodeSet = make(map[uint64]*Node)
+	data.EdgeSet = make(map[string]*Edge)
 	return &data
 }
 
@@ -134,25 +131,7 @@ func (conf *Config) MakeColor() string {
 	return conf.Colors[color_index]
 }
 
-func (conf Config) Neo4jNodes2VisjsNodes(origNodes []neo4j.Node) map[string]Node {
-	nodeSet := make(map[string]Node)
-	for _, origNode := range origNodes {
-		node := conf.Neo4jNode2VisjsNode(origNode, nil)
-		node.AddNodeSet(nodeSet)
-	}
-	return nodeSet
-}
-
-func (conf Config) Neo4jEdges2VisjsEdges(origEdges []neo4j.Relationship) map[string]Edge {
-	edgeSet := make(map[string]Edge)
-	for _, origEdge := range origEdges {
-		edge := conf.Neo4jEdge2VisjsEdge(origEdge)
-		edge.AddEdgeSet(edgeSet)
-	}
-	return edgeSet
-}
-
-func (conf *Config) Neo4jNode2VisjsNode(origNode neo4j.Node, deco *Deco) Node {
+func (conf *Config) Neo4jNode2VisjsNode(origNode neo4j.Node, deco *Deco) *Node {
 	node := Node{}
 	node.Id = uint64(origNode.Id())
 	node.Kind = origNode.Labels()[0]
@@ -186,13 +165,13 @@ func (conf *Config) Neo4jNode2VisjsNode(origNode neo4j.Node, deco *Deco) Node {
 			conf.NodeColors[origNode.Labels()[0]] = node.Color
 		}
 	}
-	return node
+	return &node
 }
 
-func (conf Config) Neo4jEdge2VisjsEdge(origEdge neo4j.Relationship) Edge {
+func (conf Config) Neo4jEdge2VisjsEdge(origEdge neo4j.Relationship) *Edge {
 	edge := Edge{}
 	edge.From = origEdge.StartId()
 	edge.To = origEdge.EndId()
 	edge.Label = origEdge.Type()
-	return edge
+	return &edge
 }
